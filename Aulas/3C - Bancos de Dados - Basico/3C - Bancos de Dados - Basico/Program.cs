@@ -11,7 +11,33 @@ namespace _3C___Bancos_de_Dados___Basico
     {
         static void Main(string[] args)
         {
-            char outro;
+            int op = Menu();
+            while(op != 0)
+            {
+                switch (op)  //escolha de opções
+                {
+                    case 1: { InserirPessoas(); break; }
+                    case 2: { DeletarPessoa(); break; }
+                }
+
+                op = Menu();
+            }
+        }
+
+        static int Menu()
+        {
+            Console.WriteLine("Controle de pessoas:\n");
+            Console.WriteLine("1 - Inserir pessoas");
+            Console.WriteLine("2 - Remover pessoas");
+            Console.Write("Opção: ");
+
+            int resp = int.Parse(Console.ReadLine());
+            return resp;
+        }
+
+        static void InserirPessoas()
+        {
+            ConsoleKeyInfo outro;
 
             do
             {
@@ -34,9 +60,13 @@ namespace _3C___Bancos_de_Dados___Basico
 
                 SqlCommand comando = new SqlCommand();
                 comando.Connection = conexao;
-                comando.CommandText = string.Format(@"
+                comando.CommandText = @"
                       INSERT INTO ALUNO (Nome, Sobrenome, Idade)
-                      VALUES ('{0}', '{1}', {2});", nome, sobrenome, idade);
+                      VALUES (@nome, @sobre, @idade);";
+
+                comando.Parameters.AddWithValue("@nome", nome);
+                comando.Parameters.AddWithValue("@sobre", sobrenome);
+                comando.Parameters.AddWithValue("@idade", idade);
 
                 // Exibindo o comando final produzido com o string.Format e que será executado
                 // Console.WriteLine("Comando: {0}", comando.CommandText);
@@ -51,9 +81,28 @@ namespace _3C___Bancos_de_Dados___Basico
                     Console.WriteLine("Algo deu errado");
 
                 Console.Write("Deseja inserir outro (S/N)? ");
-                outro = Console.ReadKey().KeyChar;
+                outro = Console.ReadKey();
 
-            } while (outro == 'S');
+            } while (outro.Key == ConsoleKey.S);
+        }
+
+        static void DeletarPessoa()
+        {
+            Console.WriteLine("Deletar uma Pessoa");
+
+            Console.Write("\nNome: ");
+            string nome = Console.ReadLine();
+            Console.Write("Sobrenome: ");
+            string sobrenome = Console.ReadLine();
+
+
+
+            //Interação com o BD
+            // CommandText passa a ser um DELETE
+
+
+
+            Console.WriteLine("Registro removido com sucesso.");
         }
     }
 }
