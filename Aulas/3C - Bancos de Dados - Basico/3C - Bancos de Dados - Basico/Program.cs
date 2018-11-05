@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Data.SqlClient;
 
 namespace _3C___Bancos_de_Dados___Basico
 {
@@ -17,19 +17,80 @@ namespace _3C___Bancos_de_Dados___Basico
                 switch (op)  //escolha de opções
                 {
                     case 1: { InserirPessoas(); break; }
-                    case 2: { DeletarPessoa(); break; }
+                    case 2: { DeletarPessoas(); break; }
+                    case 3: { ConsultarPessoas(); break; }
                 }
 
                 op = Menu();
             }
         }
 
+        static string Linha(int tam)
+        {
+            string x = "";
+            for(int i=0; i<tam; i++)
+                x += "-";
+
+            return x;
+        }
+
+        static void ConsultarPessoas()
+        {
+            Console.Clear();
+
+            Console.WriteLine("Consulta de Alunos:\n");
+            //Console.Write("Nome: ");
+            //string nome = Console.ReadLine();
+
+            SqlConnection conexao = new SqlConnection(
+                @"Data source = EN2LIC00;
+                    Initial catalog = AulaLP2;
+                    Integrated security = SSPI;");
+
+            SqlCommand comando = new SqlCommand();
+            comando.Connection = conexao;
+            comando.CommandText = @"
+                    SELECT a.Id, a.Nome, a.Sobrenome, t.Nome
+                    FROM ALUNO a, TURMA t
+                    WHERE t.Id = a.IdTurma
+                    ORDER BY t.Nome, a.Nome, a.Sobrenome;";
+
+            // Exibindo o comando final produzido com o string.Format e que será executado
+            // Console.WriteLine("Comando: {0}", comando.CommandText);
+
+            conexao.Open();
+            SqlDataReader reader = comando.ExecuteReader();
+
+            string cabecalho = String.Format("{0,-6}|{1,-16}|{2,-16}|{3,-10}|", "ID", "NOME", "SOBRENOME", "TURMA");
+
+            Console.WriteLine(Linha(cabecalho.Length));
+            Console.WriteLine(cabecalho);
+            Console.WriteLine(Linha(cabecalho.Length));
+
+            while (reader.Read())
+            {
+                int id = reader.GetInt32(0);
+                string nome = reader.GetString(1);
+                string sn = reader.GetString(2);
+                string turma = reader.GetString(3);
+                Console.WriteLine("{0,-6}|{1,-16}|{2,-16}|{3,-10}|", id, nome, sn, turma);
+            }
+
+            Console.WriteLine(Linha(cabecalho.Length));
+
+            conexao.Close();
+            Console.WriteLine("\nAperte qualquer tecla para retornar ao menu...");
+            Console.ReadKey();
+        }
+
         static int Menu()
         {
-            Console.WriteLine("Controle de pessoas:\n");
-            Console.WriteLine("1 - Inserir pessoas");
-            Console.WriteLine("2 - Remover pessoas");
-            Console.Write("Opção: ");
+            Console.Clear();
+            Console.WriteLine("Controle de Alunos:\n");
+            Console.WriteLine("1 - Inserir alunos");
+            Console.WriteLine("2 - Remover alunos");
+            Console.WriteLine("3 - Consultar alunos cadastrados");
+            Console.Write("\nOpção: ");
 
             int resp = int.Parse(Console.ReadLine());
             return resp;
@@ -86,23 +147,50 @@ namespace _3C___Bancos_de_Dados___Basico
             } while (outro.Key == ConsoleKey.S);
         }
 
-        static void DeletarPessoa()
+        static void DeletarPessoas()
         {
-            Console.WriteLine("Deletar uma Pessoa");
+            ConsoleKeyInfo outro;
 
-            Console.Write("\nNome: ");
-            string nome = Console.ReadLine();
-            Console.Write("Sobrenome: ");
-            string sobrenome = Console.ReadLine();
+            do
+            {
+                Console.Clear();
+                Console.WriteLine("Deletar um Aluno");
 
+                Console.Write("\nNome: ");
+                string nome = Console.ReadLine();
+                Console.Write("Sobrenome: ");
+                string sobrenome = Console.ReadLine();
+                SqlConnection conexao = new SqlConnection(
+                    @"Data source = EN2LIC00;
+                      Initial catalog = AulaLP2;
+                      Integrated security = SSPI;");
 
+                SqlCommand comando = new SqlCommand();
+                comando.Connection = conexao;
+                comando.CommandText = @"
+                      DELETE FROM ALUNO
+                      WHERE Nome = @nome AND Sobrenome = @sobre;";
 
-            //Interação com o BD
-            // CommandText passa a ser um DELETE
+                comando.Parameters.AddWithValue("@nome", nome);
+                comando.Parameters.AddWithValue("@sobre", sobrenome);
 
+                // Exibindo o comando final produzido com o string.Format e que será executado
+                // Console.WriteLine("Comando: {0}", comando.CommandText);
 
+                conexao.Open();
+                int result = comando.ExecuteNonQuery();
+                conexao.Close();
 
-            Console.WriteLine("Registro removido com sucesso.");
+                if (result > 0)
+                    Console.WriteLine("Registro removido com sucesso.");
+                else
+                    Console.WriteLine("Algo deu errado");
+
+                Console.Write("Deseja remover outro (S/N)? ");
+                outro = Console.ReadKey();
+
+            } while (outro.Key == ConsoleKey.S);
+
         }
     }
 }
