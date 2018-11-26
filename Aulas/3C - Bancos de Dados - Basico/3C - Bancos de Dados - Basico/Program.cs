@@ -11,6 +11,12 @@ namespace _3C___Bancos_de_Dados___Basico
     {
         static void Main(string[] args)
         {
+            ConsultaAlunos();
+            //MainOpsBd();
+        }
+
+        static void MainOpsBd()
+        {
             int op = Menu();
             while(op != 0)
             {
@@ -25,13 +31,14 @@ namespace _3C___Bancos_de_Dados___Basico
             }
         }
 
-        static string Linha(int tam)
+        static string Linha(int tam, bool borda = false)
         {
-            string x = "";
-            for(int i=0; i<tam; i++)
+            string c = (borda ? "|" : " ");
+            string x = c;
+            for(int i=0; i<tam-2; i++)
                 x += "-";
 
-            return x;
+            return x + c;
         }
 
         static void ConsultarPessoas()
@@ -43,8 +50,8 @@ namespace _3C___Bancos_de_Dados___Basico
             //string nome = Console.ReadLine();
 
             SqlConnection conexao = new SqlConnection(
-                @"Data source = EN2LIC00;
-                    Initial catalog = AulaLP2;
+                @"Data Source = EN2LIC00;
+                    Initial Catalog = AulaLP2;
                     Integrated security = SSPI;");
 
             SqlCommand comando = new SqlCommand();
@@ -63,20 +70,26 @@ namespace _3C___Bancos_de_Dados___Basico
 
             string cabecalho = String.Format("{0,-6}|{1,-16}|{2,-16}|{3,-10}|", "ID", "NOME", "SOBRENOME", "TURMA");
 
-            Console.WriteLine(Linha(cabecalho.Length));
+            Console.WriteLine(Linha(cabecalho.Length, true));
             Console.WriteLine(cabecalho);
-            Console.WriteLine(Linha(cabecalho.Length));
+            Console.WriteLine(Linha(cabecalho.Length, true));
+
+            List<Aluno> pessoas = new List<Aluno>();
 
             while (reader.Read())
             {
-                int id = reader.GetInt32(0);
-                string nome = reader.GetString(1);
-                string sn = reader.GetString(2);
-                string turma = reader.GetString(3);
-                Console.WriteLine("{0,-6}|{1,-16}|{2,-16}|{3,-10}|", id, nome, sn, turma);
+                Aluno p = new Aluno() {
+                    Id = reader.GetInt32(0),
+                    Nome = reader.GetString(1),
+                    Sobrenome = reader.GetString(2),
+                    Turma = reader.GetString(3)
+                };
+
+                pessoas.Add(p);
+                Console.WriteLine("{0,-6}|{1,-16}|{2,-16}|{3,-10}|", p.Id, p.Nome, p.Sobrenome, p.Turma);
             }
 
-            Console.WriteLine(Linha(cabecalho.Length));
+            Console.WriteLine(Linha(cabecalho.Length, true));
 
             conexao.Close();
             Console.WriteLine("\nAperte qualquer tecla para retornar ao menu...");
@@ -191,6 +204,61 @@ namespace _3C___Bancos_de_Dados___Basico
 
             } while (outro.Key == ConsoleKey.S);
 
+        }
+
+
+        static void ConsultaAlunosPorIdade()
+        {
+            Console.WriteLine("Consulta de Alunos por idade\n");
+
+            Console.Write("Minimo: ");
+            int idadeMin = int.Parse(Console.ReadLine());
+            Console.Write("Máximo: ");
+            int idadeMax = int.Parse(Console.ReadLine());
+
+            SqlConnection conexao = new SqlConnection(
+                @"Data source = EN2LIC00;
+                  Initial catalog = AulaLP2;
+                  Integrated security = SSPI;"
+            );
+
+            SqlCommand comando = new SqlCommand();
+            comando.Connection = conexao;
+            comando.CommandText = @"
+                SELECT * FROM ALUNO
+                WHERE Idade >= @imin AND Idade <= @imax
+                ORDER BY Nome, Sobrenome;";
+
+            comando.Parameters.AddWithValue("@imin", idadeMin);
+            comando.Parameters.AddWithValue("@imax", idadeMax);
+
+            conexao.Open();
+            SqlDataReader reader = comando.ExecuteReader();
+
+            if(reader.HasRows)
+            {
+                string cabecalho = String.Format("|{0,-12}|{1,-12}|{2,-5}|", "NOME", "SOBRENOME", "IDADE");
+                Console.WriteLine("\n{0}", Linha(cabecalho.Length));
+                Console.WriteLine(cabecalho);
+                Console.WriteLine("{0}", Linha(cabecalho.Length, true));
+
+                while (reader.Read())
+                {
+                    string nome = reader.GetString(1);
+                    string sobrenome = reader.GetString(2);
+                    int idade = reader.GetInt32(3);
+
+                    Console.WriteLine("|{0,-12}|{1,-12}|{2,-5}|", nome, sobrenome, idade);
+                }
+                Console.WriteLine(Linha(cabecalho.Length));
+                Console.WriteLine();
+            }
+            else
+            {
+                Console.WriteLine("Nenhum registro encontrado");
+            }
+
+            conexao.Close();
         }
     }
 }
