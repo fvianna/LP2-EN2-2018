@@ -11,8 +11,8 @@ namespace _3C___Bancos_de_Dados___Basico
     {
         static void Main(string[] args)
         {
-            ConsultaAlunos();
-            //MainOpsBd();
+            //ConsultaAlunos();
+            MainOpsBd();
         }
 
         static void MainOpsBd()
